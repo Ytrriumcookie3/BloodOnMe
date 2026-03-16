@@ -3,14 +3,14 @@ const HERO_TERMINAL_CONFIG = {
   mobileGridDensity: [34, 22],
   digitScale: 0.88,
   activitySpeed: 1.08,
-  revealThreshold: 0.47,
-  edgeSoftness: 0.06,
+  revealThreshold: 0.58,
+  edgeSoftness: 0.055,
   scanlineIntensity: 0.16,
   noiseAmount: 0.2,
   glitchAmount: 0.12,
   tintStrength: 0.1,
   brightness: 1.02,
-  mouseStrength: 0.9,
+  mouseStrength: 0.82,
   mobileQuality: 0.62,
   dprCap: 1.8,
   pauseWhenHidden: true,
@@ -32,8 +32,10 @@ precision mediump float;
 varying vec2 vUv;
 
 uniform sampler2D uVideoTexture;
+uniform sampler2D uImageTexture;
 uniform vec2 uResolution;
 uniform vec2 uVideoResolution;
+uniform vec2 uImageResolution;
 uniform vec2 uMouse;
 uniform vec2 uGridDensity;
 uniform float uTime;
@@ -101,31 +103,18 @@ float digitalMask(vec2 cellId, vec2 localUv, float activity) {
   return bitOn * pixelShape;
 }
 
-vec3 darkBaseColor(vec2 uv, float pulse) {
-  float vignette = 1.0 - smoothstep(0.22, 0.9, distance(uv, vec2(0.5)));
-  float slowNoise = noise(uv * vec2(3.2, 7.8) + vec2(0.0, uTime * 0.05));
-  float fineNoise = noise(uv * uResolution * 0.006 + uTime * 0.11);
-  float scan = sin(uv.y * uResolution.y * 0.08 + uTime * 0.7) * 0.5 + 0.5;
-
-  vec3 base = vec3(0.022, 0.0225, 0.025);
-  base += vec3(0.008, 0.0085, 0.01) * vignette;
-  base += vec3(0.01, 0.0105, 0.012) * slowNoise;
-  base += vec3(0.004, 0.0045, 0.005) * fineNoise;
-  base += vec3(0.0025, 0.003, 0.0035) * scan * uScanlineIntensity;
-  base += vec3(0.002, 0.0024, 0.003) * pulse;
-
-  return base;
-}
-
 void main() {
   vec2 uv = vUv;
   vec2 videoUv = coverUv(uv, uResolution, uVideoResolution);
+  vec2 imageUv = coverUv(uv, uResolution, uImageResolution);
 
   float displacement = (noise(vec2(uv.y * 28.0, uTime * 0.35)) - 0.5) * 0.006;
   displacement *= uGlitchAmount * mix(1.0, 0.45, 1.0 - uMobileQuality);
   videoUv.x += displacement;
+  imageUv.x += displacement * 0.82;
 
   vec3 videoColor = texture2D(uVideoTexture, clamp(videoUv, 0.001, 0.999)).rgb;
+  vec3 baseColor = texture2D(uImageTexture, clamp(imageUv, 0.001, 0.999)).rgb;
 
   vec2 grid = uGridDensity;
   vec2 cellUv = uv * grid;
@@ -157,15 +146,14 @@ void main() {
 
   float bits = digitalMask(cellId, localUv, activity);
   float organic = mix(0.88, 1.12, noise(cellId * 0.47 + localUv * 2.7 + uTime * 0.16));
-  float revealMask = activeMask * mix(0.24, 1.5, bits) * cellWindow * organic;
-  revealMask = smoothstep(0.12, 0.82, revealMask);
-  revealMask = clamp(revealMask * 1.16, 0.0, 1.0);
+  float revealMask = activeMask * mix(0.16, 1.12, bits) * cellWindow * organic;
+  revealMask = smoothstep(0.18, 0.9, revealMask);
+  revealMask = clamp(revealMask * 0.92, 0.0, 1.0);
 
   vec3 tint = mix(vec3(1.0), vec3(0.93, 0.98, 0.95), uTintStrength);
   float scanlines = 1.0 - sin(uv.y * uResolution.y * 1.05) * 0.02 * uScanlineIntensity;
-  float cellGlow = bits * activeMask * (0.022 + 0.07 * activity) * (0.55 + 0.45 * uMobileQuality);
+  float cellGlow = bits * activeMask * (0.018 + 0.052 * activity) * (0.55 + 0.45 * uMobileQuality);
   float ghostGrid = cellWindow * (0.006 + 0.016 * pulse) * uTintStrength;
-  vec3 baseColor = darkBaseColor(uv, pulse);
 
   vec3 color = mix(baseColor, videoColor * 1.02, revealMask);
   color += tint * (cellGlow + ghostGrid);
@@ -263,6 +251,16 @@ function waitForVideo(video) {
   });
 }
 
+function loadImageTextureSource(src) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.decoding = "async";
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("Hero poster image failed to load"));
+    image.src = src;
+  });
+}
+
 class HeroTerminalRenderer {
   constructor(hero, video, container, options = {}) {
     this.hero = hero;
@@ -287,8 +285,10 @@ class HeroTerminalRenderer {
     this.program = createProgram(this.gl, vertexShaderSource, fragmentShaderSource);
     this.buffer = this.gl.createBuffer();
     this.videoTexture = createTexture(this.gl);
+    this.imageTexture = createTexture(this.gl);
     this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
 
+    this.imageResolution = [1, 1];
     this.videoResolution = [
       this.video.videoWidth || 1920,
       this.video.videoHeight || 1080,
@@ -308,6 +308,7 @@ class HeroTerminalRenderer {
     this.uniforms = {
       uResolution: this.gl.getUniformLocation(this.program, "uResolution"),
       uVideoResolution: this.gl.getUniformLocation(this.program, "uVideoResolution"),
+      uImageResolution: this.gl.getUniformLocation(this.program, "uImageResolution"),
       uMouse: this.gl.getUniformLocation(this.program, "uMouse"),
       uGridDensity: this.gl.getUniformLocation(this.program, "uGridDensity"),
       uTime: this.gl.getUniformLocation(this.program, "uTime"),
@@ -334,16 +335,37 @@ class HeroTerminalRenderer {
     this.initUniforms();
     this.bindEvents();
 
+    const baseImageSource = this.video.poster;
+
+    if (!baseImageSource) {
+      throw new Error("Missing hero poster image");
+    }
+
     this.video.muted = true;
     this.video.playsInline = true;
     this.video.play().catch(() => {});
 
-    await waitForVideo(this.video);
+    const [image] = await Promise.all([
+      loadImageTextureSource(baseImageSource),
+      waitForVideo(this.video),
+    ]);
+
+    this.imageResolution = [image.naturalWidth || 1, image.naturalHeight || 1];
 
     this.videoResolution = [
       this.video.videoWidth || this.videoResolution[0],
       this.video.videoHeight || this.videoResolution[1],
     ];
+
+    this.gl.bindTexture(this.gl.TEXTURE_2D, this.imageTexture);
+    this.gl.texImage2D(
+      this.gl.TEXTURE_2D,
+      0,
+      this.gl.RGBA,
+      this.gl.RGBA,
+      this.gl.UNSIGNED_BYTE,
+      image
+    );
 
     this.updateResponsiveUniforms();
     this.handleResize();
@@ -372,6 +394,7 @@ class HeroTerminalRenderer {
 
   initUniforms() {
     this.gl.uniform1i(this.gl.getUniformLocation(this.program, "uVideoTexture"), 0);
+    this.gl.uniform1i(this.gl.getUniformLocation(this.program, "uImageTexture"), 1);
     this.gl.uniform1f(this.uniforms.uDigitScale, this.config.digitScale);
     this.gl.uniform1f(this.uniforms.uActivitySpeed, this.config.activitySpeed);
     this.gl.uniform1f(this.uniforms.uRevealThreshold, this.config.revealThreshold);
@@ -511,6 +534,8 @@ class HeroTerminalRenderer {
     this.gl.useProgram(this.program);
     this.gl.activeTexture(this.gl.TEXTURE0);
     this.gl.bindTexture(this.gl.TEXTURE_2D, this.videoTexture);
+    this.gl.activeTexture(this.gl.TEXTURE1);
+    this.gl.bindTexture(this.gl.TEXTURE_2D, this.imageTexture);
 
     this.gl.uniform1f(this.uniforms.uTime, time * 0.001);
     this.gl.uniform2f(this.uniforms.uMouse, this.mouseCurrent.x, this.mouseCurrent.y);
@@ -518,6 +543,11 @@ class HeroTerminalRenderer {
       this.uniforms.uVideoResolution,
       this.videoResolution[0],
       this.videoResolution[1]
+    );
+    this.gl.uniform2f(
+      this.uniforms.uImageResolution,
+      this.imageResolution[0],
+      this.imageResolution[1]
     );
 
     this.gl.drawArrays(this.gl.TRIANGLES, 0, 6);
@@ -544,6 +574,7 @@ class HeroTerminalRenderer {
     }
 
     this.gl.deleteTexture(this.videoTexture);
+    this.gl.deleteTexture(this.imageTexture);
     this.gl.deleteBuffer(this.buffer);
     this.gl.deleteProgram(this.program);
   }
