@@ -3,10 +3,82 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blood On Me</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <header class="hero">
+      <div class="overlay"></div>
+
+      <nav class="header-shell" aria-label="Navigation principale">
+        <div class="header-left">
+          <button class="icon-btn burger-btn" aria-label="Ouvrir le menu">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M4 7h16M4 12h16M4 17h16"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
+          <a href="#" class="nav-link">Homme</a>
+          <a href="#" class="nav-link">Femme</a>
+        </div>
+
+        <div class="header-center">
+          <a href="#" class="logo-link" aria-label="Accueil Blood On Me">
+            <img
+              src="assets/logo/blood_on_me.svg"
+              alt="Blood On Me"
+              class="brand-logo"
+            />
+          </a>
+        </div>
+
+        <div class="header-right">
+          <button class="icon-btn" aria-label="Mallette">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M8 7V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1m-12 3h16m-14 0v8a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-8"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+          <button class="icon-btn" aria-label="Compte utilisateur">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm-7 9a7 7 0 0 1 14 0"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+        </div>
+      </nav>
     </header>
+
+    <script>
+      const header = document.querySelector(".header-shell");
+
+      const updateHeaderState = () => {
+        if (window.scrollY > 8) {
+          header.classList.add("is-scrolled");
+        } else {
+          header.classList.remove("is-scrolled");
+        }
+      };
+
+      updateHeaderState();
+      window.addEventListener("scroll", updateHeaderState, { passive: true });
+    </script>
   </body>
 </html>
