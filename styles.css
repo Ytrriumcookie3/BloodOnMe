@@ -52,7 +52,32 @@ body {
     transparent 100%
   );
   pointer-events: none;
+  opacity: 1;
+  transition: opacity 280ms ease;
+  z-index: -3;
+}
+
+.hero-terminal {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 320ms ease;
   z-index: -2;
+}
+
+.hero-terminal canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.hero.is-enhanced .hero-terminal {
+  opacity: 1;
+}
+
+.hero.is-enhanced .hero-video {
+  opacity: 0;
 }
 
 .hero::before {
