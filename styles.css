@@ -1,6 +1,6 @@
 :root {
   --text: #f7f7f7;
-  --bg: #0f0f0f;
+  --bg: #070707;
   --header-bg: rgba(0, 0, 0, 0.88);
   --header-border: rgba(255, 255, 255, 0.12);
 }
@@ -20,16 +20,59 @@ body {
 .hero {
   position: relative;
   min-height: 100vh;
-  background: url("assets/images/cover_1.avif") center / cover no-repeat;
+  background: var(--bg);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.08) 0%,
+      rgba(0, 0, 0, 0.16) 42%,
+      rgba(0, 0, 0, 0.4) 68%,
+      rgba(0, 0, 0, 0.74) 84%,
+      var(--bg) 100%
+    ),
+    url("assets/images/cover_1.avif");
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+  background-size: cover, cover;
+  transform: scale(1.015);
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    #000 0%,
+    #000 58%,
+    rgba(0, 0, 0, 0.96) 74%,
+    rgba(0, 0, 0, 0.7) 88%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    180deg,
+    #000 0%,
+    #000 58%,
+    rgba(0, 0, 0, 0.96) 74%,
+    rgba(0, 0, 0, 0.7) 88%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: -1;
 }
 
 .products-section {
   --products-gap: clamp(0.75rem, 1.3vw, 1.15rem);
   width: 100%;
-  background: radial-gradient(circle at top, #161616 0%, #0b0b0b 48%, #070707 100%);
-  padding: clamp(3.8rem, 6.5vw, 6rem) 0 clamp(2.8rem, 5vw, 4.4rem);
+  position: relative;
+  z-index: 1;
+  margin-top: clamp(-7rem, -10vw, -4.5rem);
+  background: transparent;
+  padding: clamp(7.25rem, 10.5vw, 9rem) 0 clamp(2.8rem, 5vw, 4.4rem);
 }
 
 .products-grid {
@@ -89,9 +132,11 @@ body {
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(0, 0, 0, 0.24) 0%,
-    rgba(0, 0, 0, 0.52) 100%
+    rgba(0, 0, 0, 0.06) 0%,
+    rgba(0, 0, 0, 0.12) 46%,
+    rgba(0, 0, 0, 0.26) 100%
   );
+  pointer-events: none;
 }
 
 .header-shell {
@@ -267,7 +312,8 @@ body {
   }
 
   .products-section {
-    padding: 2rem 0 2.5rem;
+    margin-top: clamp(-3.5rem, -11vw, -2.25rem);
+    padding: 4.85rem 0 2.5rem;
   }
 
   .products-grid {
