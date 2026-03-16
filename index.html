@@ -66,8 +66,25 @@
       </nav>
     </header>
 
+    <aside class="cookie-banner" id="cookieBanner" role="dialog" aria-live="polite" aria-label="Préférences cookies">
+      <div class="cookie-banner__content">
+        <p class="cookie-banner__text">
+          UTILISATIONS DES COOKIES POUR AMÉLIORER VOTRE EXPÉRIENCE DE NAVIGATION ET ANALYSER NOTRE TRAFIC.
+        </p>
+        <div class="cookie-banner__actions">
+          <button class="cookie-btn cookie-btn--accept" id="acceptCookies" type="button">ACCEPTER</button>
+          <button class="cookie-btn cookie-btn--reject" id="rejectCookies" type="button">REJETER</button>
+        </div>
+      </div>
+    </aside>
+
     <script>
       const header = document.querySelector(".header-shell");
+      const cookieBanner = document.querySelector("#cookieBanner");
+      const acceptCookiesBtn = document.querySelector("#acceptCookies");
+      const rejectCookiesBtn = document.querySelector("#rejectCookies");
+      const consentStorageKey = "bloodonme-cookie-consent";
+      const urlParams = new URLSearchParams(window.location.search);
 
       const updateHeaderState = () => {
         if (window.scrollY > 8) {
@@ -79,6 +96,27 @@
 
       updateHeaderState();
       window.addEventListener("scroll", updateHeaderState, { passive: true });
+
+      const hideCookieBanner = (choice) => {
+        localStorage.setItem(consentStorageKey, choice);
+        cookieBanner.classList.add("cookie-banner--hidden");
+      };
+
+      if (urlParams.get("cookies") === "reset") {
+        localStorage.removeItem(consentStorageKey);
+      }
+
+      const savedChoice = localStorage.getItem(consentStorageKey);
+
+      if (
+        urlParams.get("cookies") !== "show" &&
+        (savedChoice === "accepted" || savedChoice === "rejected")
+      ) {
+        cookieBanner.classList.add("cookie-banner--hidden");
+      }
+
+      acceptCookiesBtn.addEventListener("click", () => hideCookieBanner("accepted"));
+      rejectCookiesBtn.addEventListener("click", () => hideCookieBanner("rejected"));
     </script>
   </body>
 </html>
