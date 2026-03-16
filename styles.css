@@ -85,14 +85,29 @@ body {
 .feature-cover-section {
   position: relative;
   width: 100%;
+  min-height: clamp(38rem, 56vw, 62rem);
   background: #020202;
   isolation: isolate;
+  overflow: hidden;
 }
 
-.feature-cover-image {
-  display: block;
-  width: 100%;
-  height: auto;
+.feature-cover-section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(2, 2, 2, 0) 0%,
+      rgba(0, 0, 0, 0.12) 22%,
+      rgba(0, 0, 0, 0.2) 52%,
+      rgba(0, 0, 0, 0.56) 84%,
+      #020202 100%
+    ),
+    url("assets/images/cover_2.jpg");
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+  background-size: cover, cover;
   -webkit-mask-image: linear-gradient(
     180deg,
     transparent 0%,
@@ -115,6 +130,8 @@ body {
     rgba(0, 0, 0, 0.62) 93%,
     transparent 100%
   );
+  pointer-events: none;
+  transform: scale(1.015);
 }
 
 .site-footer {
@@ -424,6 +441,10 @@ body {
     padding: 5.9rem 0;
   }
 
+  .feature-cover-section {
+    min-height: clamp(30rem, 92vh, 42rem);
+  }
+
   .site-footer {
     margin-top: clamp(-2.4rem, -7vw, -1.5rem);
     padding: 3.6rem 0 2.6rem;
@@ -456,7 +477,7 @@ body {
 
   .products-grid {
     padding-inline: var(--products-gap);
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1.1rem;
   }
 
