@@ -83,6 +83,17 @@ body {
   gap: var(--products-gap);
 }
 
+.feature-cover-section {
+  width: 100%;
+  background: var(--bg);
+}
+
+.feature-cover-image {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
 .product-card {
   min-width: 0;
 }
